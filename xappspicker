@@ -8,6 +8,7 @@
 
 ### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
 ### https://stackoverflow.com/a/11686912
+: ${GTK2_RC_FILES=$HOME/.gtkrc-2.0}
 : ${GTK2_CURRENT_THEME=$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)}
 if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
 then 
