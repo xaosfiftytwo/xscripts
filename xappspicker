@@ -1,22 +1,39 @@
 #!/bin/bash
 
-#~ What does it do ?
-#~ It grabs the bg and fg colors from the current theme (now with python! much
-#~ easier!), and sets them as back or foreground for the Xapps. (they can be
-#~ customized only by Xresources)
-#~ https://forums.bunsenlabs.org/viewtopic.php?id=1941
-#~  - additionally, it defines colors for dmenu.
-#~  - it will invert the background color, and slightly darken it, and use the 2
-#~    resulting colors to create a root window background with xsetroot.
-#~  - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
-#~    and is named "xsetrootbitmap.xbm"
-#~  - if ./conky/conkyrc exists in the theme's root directory, it will be started -
-#~    but only if it isn't already running.
+#### What does it do ?
+# It grabs the bg and fg colors from the current theme (now with python! much
+# easier!), and sets them as back or foreground for the Xapps. (they can be
+# customized only by Xresources)
+# also see forums.bunsenlabs.org/viewtopic.php?id=1941
+# 
+#  - additionally, it defines colors for dmenu.
+#  - it will invert the background color, and slightly darken it, and use the 2
+#    resulting colors to create a root window background with xsetroot.
+#  - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
+#    and is named "xsetrootbitmap.xbm"
+#  - if ./conky/theme.conkyrc exists in the theme's root directory, it will be
+#    started - but only if it isn't already running. The idea is to have conky
+#    display something that visuall enhances the wallpaper, e.g. an emblem, but 
+#    of course it can be anything...
+#    
+# if you don't want some particular function, it is easy to comment it out in the
+# MAIN section (line 165 =>)
+# 
+# #### Requirements:
+# 
+#  - `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
+# sure that this is included in a package called `pygtk`. And you most probably
+# already have it.
+#  - `xsetroot`
+#  - a fairly recent version of `bash`, I'd guess.  
+#  - the optional `do_conky` function relies on `pgrep`.
 
-### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
+### GTK2_RC_FILES is probably already part of the env (at least on my systems)
 ### https://stackoverflow.com/a/11686912
 : ${GTK2_RC_FILES=$HOME/.gtkrc-2.0}
-: ${GTK2_CURRENT_THEME=$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)}
+# the latter we have to redo time and again, otherwise the script won't work
+# when run manually after a theme change.
+GTK2_CURRENT_THEME="$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)"
 if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
 then 
        themepath="/usr/share/themes/$GTK2_CURRENT_THEME"
@@ -154,7 +171,8 @@ fi
 
 do_conky ()
 {
-  kill "$(pgrep -f 'conky -c ./theme.conkyrc')"
+  local pid="$(pgrep -f 'conky -c ./theme.conkyrc')"
+  [[ "x$pid" != "x" ]] && kill "$pid"
   cd "$themepath/conky/"
   [ -r "$themepath/conky/theme.conkyrc" ] && conky -c "./theme.conkyrc" & disown
 }
