@@ -17,11 +17,11 @@ also see forums.bunsenlabs.org/viewtopic.php?id=1941
    and is named "xsetrootbitmap.xbm"
  - if ./conky/theme.conkyrc exists in the theme's root directory, it will be
    started - but only if it isn't already running. The idea is to have conky
-   display something that visuall enhances the wallpaper, e.g. an emblem, but 
+   display something that visually enhances the wallpaper, e.g. an emblem, but 
    of course it can be anything...
    
 if you don't want some particular function, it is easy to comment it out in the
-MAIN section (line 165 =>)
+MAIN section (line 181 =>)
 
 #### Requirements:
 
