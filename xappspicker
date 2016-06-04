@@ -5,6 +5,13 @@
 #~ easier!), and sets them as back or foreground for the Xapps. (they can be
 #~ customized only by Xresources)
 #~ https://forums.bunsenlabs.org/viewtopic.php?id=1941
+#~  - additionally, it defines colors for dmenu.
+#~  - it will invert the background color, and slightly darken it, and use the 2
+#~    resulting colors to create a root window background with xsetroot.
+#~  - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
+#~    and is named "xsetrootbitmap.xbm"
+#~  - if ./conky/conkyrc exists in the theme's root directory, it will be started -
+#~    but only if it isn't already running.
 
 ### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
 ### https://stackoverflow.com/a/11686912
@@ -31,7 +38,7 @@ colorfile="$HOME/.local/share/xorg/xapps-col.xres"
 
 ########################## FUNCTIONS BEGIN ####################################
 
-adjust ()
+adjust_xapps ()
 {
 ##backgr
 #~ printf "XCalc.ti.Command.background: ${fgbg[1]}
@@ -81,6 +88,11 @@ printf "xscreensaver*foreground: ${fgbg[0]}
 " >> "$colorfile"
 #~ printf "*foreground: ${fgbg[0]} 
 #~ " >> "$colorfile"
+
+# the rest is only necessary if you don't run xappspicker at each login:
+#~ includestring="#include <$colorfile>"
+#~ xresources="$HOME/.Xresources"
+#~ [[ "$(tail -1 "$xresources")" != "$includestring" ]] && echo "$includestring" >> "$xresources"
 }
 
 adjust_dmenu ()
@@ -100,6 +112,8 @@ w.realize()
 style=w.get_style()
 print style.fg[gtk.STATE_NORMAL].to_string()
 print style.bg[gtk.STATE_NORMAL].to_string()' 2>/dev/null))
+
+hex12to6
 }
 
 hex12to6 ()
@@ -140,8 +154,9 @@ fi
 
 do_conky ()
 {
+  kill "$(pgrep -f 'conky -c ./theme.conkyrc')"
   cd "$themepath/conky/"
-  [ -r "$themepath/conky/conkyrc" ] && conky -c "$themepath/conky/conkyrc" & disown
+  [ -r "$themepath/conky/theme.conkyrc" ] && conky -c "./theme.conkyrc" & disown
 }
 ######################## FUNCTIONS END ########################################
 
@@ -150,10 +165,12 @@ do_conky ()
 rm -f "$colorfile"
 
 grepcol
-hex12to6
-adjust
-[ -n "$dmenurc" ] && adjust_dmenu
+
+adjust_xapps
+
 xrdb -merge "$colorfile"
+
+[ -n "$dmenurc" ] && adjust_dmenu
 
 invert # inverts colors!
 #~ fgbg[1]="$(half "${fgbg[1]}")" # make bg darker!
