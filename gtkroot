@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#~ exec >~/testing
+grepcol ()
+{
+### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
+### https://stackoverflow.com/a/11686912
+: ${GTK2_CURRENT_THEME=$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)}
+
+#### then extract the colors
+
+if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
+then 
+       path=/usr/share/themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc
+else
+       path=~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc
+fi
+
+echo -n "hsetroot"
+printf "$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path"|cut -d\" -f2)" | while read line
+do
+       echo -n " -addd ${line##*:} $((RANDOM%100))"
+done
+
+echo -n " -gradient $((RANDOM%90)) -brightness -0.1
+"
+#~ for (( j=0 ; j<i ; j++ )); do
+       #~ rootcmd="$rootcmd${col[j]}"
+#~ done
+#~ rootcmd="$rootcmd -gradient $((RANDOM%90)) -brightness -0.2"
+#~ col_bg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Fnbg_color: '/#/ {print $2}' | head -c 7)
+#~ col_fg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Ffg_color: '/#/ {print $2}' | head -c 7)  
+#~ IFS="$oldifs"
+
+
+}
+
+$(grepcol)

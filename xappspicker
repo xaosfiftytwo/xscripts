@@ -1,0 +1,162 @@
+#!/bin/bash
+
+#~ What does it do ?
+#~ It grabs the bg and fg colors from the current theme (now with python! much
+#~ easier!), and sets them as back or foreground for the Xapps. (they can be
+#~ customized only by Xresources)
+#~ https://forums.bunsenlabs.org/viewtopic.php?id=1941
+
+### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
+### https://stackoverflow.com/a/11686912
+: ${GTK2_CURRENT_THEME=$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)}
+if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
+then 
+       themepath="/usr/share/themes/$GTK2_CURRENT_THEME"
+else
+       themepath="$HOME/.themes/$GTK2_CURRENT_THEME"
+fi
+
+# since dmenu is not an Xapp, this is optional.
+# set to empty string to disable.
+dmenurc="$HOME/.config/dmenu/dmenurc"
+#~ dmenurc=""
+
+# font definitions in dmenu 4.6 are unclear to me. they also differ from
+# suckless-tools 4.5 - one cannot pass xfont-strings.
+# the one below should work on all systems, or at least fail silently.
+dmenufont="terminus"
+
+colorfile="$HOME/.local/share/xorg/xapps-col.xres"
+
+########################## FUNCTIONS BEGIN ####################################
+
+adjust ()
+{
+##backgr
+#~ printf "XCalc.ti.Command.background: ${fgbg[1]}
+#~ "   >> "$colorfile"
+#~ printf "XCal*background: ${fgbg[1]}
+#~ " >> "$colorfile"
+printf "XFontSel*background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "display.background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "bitmap*background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "Xmag*background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "Xmag*helpLabel*background:  ${fgbg[0]}
+"   >> "$colorfile"
+printf "Xman*background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "xpdf*background:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "xpdf*matteColor:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "xscreensaver*background:  ${fgbg[1]}
+"   >> "$colorfile"
+#~ printf "*background:  ${fgbg[1]}
+#~ "   >> "$colorfile"
+##forg
+#~ printf "XCalc.ti.Command.foreground:  ${fgbg[0]}
+#~ " >> "$colorfile"
+#~ printf "XCal*foreground: ${fgbg[0]} 
+#~ " >> "$colorfile"
+printf "XFontSel*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "display.foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "bitmap*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "Xmag*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "Xmag*helpLabel*foreground:  ${fgbg[1]}
+"   >> "$colorfile"
+printf "Xman*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "xpdf*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+printf "xscreensaver*foreground: ${fgbg[0]} 
+" >> "$colorfile"
+#~ printf "*foreground: ${fgbg[0]} 
+#~ " >> "$colorfile"
+}
+
+adjust_dmenu ()
+{
+[ -n "$dmenufont" ] && echo -n "-fn $dmenufont " > "$dmenurc"
+echo "-nb ${fgbg[1]} -nf ${fgbg[0]} -sb ${fgbg[0]} -sf ${fgbg[1]} " >> "$dmenurc"
+echo "Created $dmenurc."
+}
+
+grepcol ()
+{
+# uses a tiny python2 snippet
+# fgbg array: fgbg[0] is foreground, fgbg[1] is background
+fgbg=($(python2 -c 'import gtk
+w = gtk.Window()
+w.realize()
+style=w.get_style()
+print style.fg[gtk.STATE_NORMAL].to_string()
+print style.bg[gtk.STATE_NORMAL].to_string()' 2>/dev/null))
+}
+
+hex12to6 ()
+{
+  for (( i=0 ; i<${#fgbg[@]} ; i++ ))
+  do
+    # simply discard the last 2 digits of each red, green and blue
+    fgbg[i]="#${fgbg[i]:1:2}${fgbg[i]:5:2}${fgbg[i]:9:2}"
+  done
+}
+
+invert ()
+{
+  # inverts colors
+  for (( i=0 ; i<${#fgbg[@]} ; i++ ))
+  do
+    r=${fgbg[i]:1:2}
+    g=${fgbg[i]:3:2}
+    b=${fgbg[i]:5:2}
+    fgbg[i]="#$(printf "%02x%02x%02x\n" $((16#FF - 16#$r)) $((16#FF - 16#$g)) $((16#FF - 16#$b)) )"
+  done
+}
+
+half ()
+{
+  printf "#%02x%02x%02x" $((16#${1:1:2} / 2)) $((16#${1:3:2} / 2)) $((16#${1:5:2} / 2)) 
+}
+
+do_xsetroot ()
+{
+xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
+if [ -r "$xsetrootbitmap" ] ; then
+  xsetroot -fg "$(half "${fgbg[1]}")" -bg "${fgbg[1]}" -bitmap "$xsetrootbitmap"
+else
+  xsetroot -fg "$(half "${fgbg[1]}")" -bg "${fgbg[1]}" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))
+fi
+}
+
+do_conky ()
+{
+  cd "$themepath/conky/"
+  [ -r "$themepath/conky/conkyrc" ] && conky -c "$themepath/conky/conkyrc" & disown
+}
+######################## FUNCTIONS END ########################################
+
+######################## MAIN BEGIN ###########################################
+
+rm -f "$colorfile"
+
+grepcol
+hex12to6
+adjust
+[ -n "$dmenurc" ] && adjust_dmenu
+xrdb -merge "$colorfile"
+
+invert # inverts colors!
+#~ fgbg[1]="$(half "${fgbg[1]}")" # make bg darker!
+
+do_xsetroot
+
+do_conky

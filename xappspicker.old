@@ -1,0 +1,182 @@
+#!/bin/bash
+
+#~ What does it do ?
+#~ It grabs the bg and fg colors from the current theme, and set them as back or 
+#~ foreground for the Xapps. (they can be customized only by Xresources)
+#~ In the case your theme gtkrc contains a properly set up color-scheme on-liner,
+#~ then the script grabs the colors. When not, then opens the gtkrc file in the
+#~ default text editor, and prompts you to look for it, and put in manually.
+#~ It offers also a choice to pick your colors you like.
+#~ https://forums.bunsenlabs.org/viewtopic.php?id=1941
+
+# since dmenu is not an Xapp, this is optional.
+# set to empty string to disable.
+dmenurc="$HOME/.config/dmenu/dmenurc"
+#~ dmenurc=""
+
+# font definitions in dmenu 4.6 are unclear to me. they also differ from
+# suckless-tools 4.5 - one cannot pass xfont-strings.
+# the one below should work on all systems, or at least fail silently.
+dmenufont="terminus"
+
+colorfile="$HOME/.local/share/xorg/xapps-col.xres"
+#~ adjust your Xresources. Remove or comment out any back-, or foreground
+#~ values by putting a "!" for the line. add this line at the bottom :
+#~ #include </absolute/path/to/colorfile>
+
+# set editor only if it is not set yet
+: ${GUI_EDITOR=/usr/bin/geany}
+
+picker ()
+{
+echo "Pick background color"
+#~ back=$(yad --color --title "Choose background color")
+back=$(grabc 2>/dev/null)
+
+echo "Pick foreground color"
+#~ forg=$(yad --color --title "Choose foreground color")
+forg=$(grabc 2>/dev/null)
+}
+
+adjust ()
+{
+##backgr
+#~ printf "XCalc.ti.Command.background: $back
+#~ "   >> "$colorfile"
+#~ printf "XCal*background: $back
+#~ " >> "$colorfile"
+#~ printf "XFontSel*background:  $back
+#~ "   >> "$colorfile"
+printf "display.background:  $back
+"   >> "$colorfile"
+printf "bitmap*background:  $back
+"   >> "$colorfile"
+printf "Xmag*background:  $back
+"   >> "$colorfile"
+printf "Xmag*helpLabel*background:  $forg
+"   >> "$colorfile"
+printf "Xman*background:  $back
+"   >> "$colorfile"
+printf "xpdf*background:  $back
+"   >> "$colorfile"
+printf "xpdf*matteColor:  $back
+"   >> "$colorfile"
+printf "xscreensaver*background:  $back
+"   >> "$colorfile"
+#~ printf "*background:  $back
+#~ "   >> "$colorfile"
+##forg
+#~ printf "XCalc.ti.Command.foreground:  $forg
+#~ " >> "$colorfile"
+#~ printf "XCal*foreground: $forg 
+#~ " >> "$colorfile"
+#~ printf "XFontSel*foreground: $forg 
+#~ " >> "$colorfile"
+printf "display.foreground: $forg 
+" >> "$colorfile"
+printf "bitmap*foreground: $forg 
+" >> "$colorfile"
+printf "Xmag*foreground: $forg 
+" >> "$colorfile"
+printf "Xmag*helpLabel*foreground:  $back
+"   >> "$colorfile"
+printf "Xman*foreground: $forg 
+" >> "$colorfile"
+printf "xpdf*foreground: $forg 
+" >> "$colorfile"
+printf "xscreensaver*foreground: $forg 
+" >> "$colorfile"
+#~ printf "*foreground: $forg 
+#~ " >> "$colorfile"
+}
+
+adjust_dmenu ()
+{
+       [ -n "$dmenufont" ] && echo -n "-fn $dmenufont " > "$dmenurc"
+       echo "-nb $back -nf $forg -sb $forg -sf $back " >> "$dmenurc"
+       echo "Created $dmenurc."
+}
+
+grepcol ()
+{
+### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
+### https://stackoverflow.com/a/11686912
+: ${GTK2_CURRENT_THEME=$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)}
+
+#### then extract the colors
+
+if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
+then 
+       path=/usr/share/themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc
+       col_bg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Fnbg_color: '/#/ {print $2}' | head -c 7)
+       col_fg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Ffg_color: '/#/ {print $2}' | head -c 7)  
+else
+       path=~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc
+       col_bg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Fnbg_color: '/#/ {print $2}' | head -c 7) 
+       col_fg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Ffg_color: '/#/ {print $2}' | head -c 7)  
+fi
+
+echo $col_bg
+echo $col_fg
+
+if [[ -z $col_bg || -z $col_fg ]]; then
+       if [[ -t "0" || -p /dev/stdin ]]
+       # are we running this interactively? see tldp.org/LDP/abs/html/intandnonint.html
+       then
+              echo 'One or more colors are undefined, please set manually'
+              $GUI_EDITOR $path &
+              echo "Please enter background color : "
+              read col_bg
+              echo "You entered: $col_bg"
+              echo "Please enter foreground color : "
+              read col_fg
+              echo "You entered: $col_fg"
+       else
+              exit 1
+       fi
+fi
+
+back=$col_bg
+forg=$col_fg
+}
+
+grepx ()
+{
+back=#$(colr bg)
+echo $back
+forg=#$(colr fg)
+echo $forg
+}
+
+if [[ -t "0" || -p /dev/stdin ]]
+# are we running this interactively? see tldp.org/LDP/abs/html/intandnonint.html
+then
+       echo -n "Do you want to adjust the Xapp's"
+       [ -n "$dmenurc" ] && echo -n " and dmenu's"
+       read -n 1 -p " look manually (y) , or apply GTK-colors (n) , or add the Xcolors (x) ? (y/n/x)? " choice
+       echo
+       case "$choice" in 
+         y|Y) picker
+              rm -f "$colorfile"
+              echo "Adding the colors of your choice" 
+              ;;
+         n|N) grepcol
+              rm -f "$colorfile" 
+              echo "Adding colors from $path" 
+              ;;
+         x|X) grepx
+              rm -f "$colorfile" 
+              echo "Adding Xcolors"
+              ;;
+         * )  echo "Aborted."
+              exit 1
+              ;;
+       esac
+else
+       grepcol
+       rm -f "$colorfile"
+fi
+
+adjust
+[ -n "$dmenurc" ] && adjust_dmenu
+xrdb -merge "$colorfile"
