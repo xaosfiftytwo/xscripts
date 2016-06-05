@@ -15,14 +15,12 @@ also see forums.bunsenlabs.org/viewtopic.php?id=1941
   and use the 2 resulting colors to create a root window background with xsetroot.
 - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
   and is named "xsetrootbitmap.xbm"
-- if ./conky/theme.conkyrc exists in the theme's root directory, it will be
-  started - but only if it isn't already running. The idea is to have conky
-  display something that visually enhances the wallpaper, e.g. an emblem, but 
-  of course it can be anything...
+- if `$conkydir` is defined, `$conkydir/xappspicker.conkyrc` will be started.
+  Else, if `./conky/xappspicker.conkyrc` exists in the theme's root directory,
+  it will be started.
 - another option is to invert particular colors, and use them for xsetroot.
    
-if you don't want some particular function, it is easy to comment it out in the
-MAIN section (line 181 =>)
+Adjustments are made in the MAIN section (the last 25 or so lines of the script).
 
 #### Requirements:
 
@@ -41,7 +39,7 @@ this to your `~/.xinitrc` or `~/.config/openbox/autostart` or some such:
 `( xappspicker ; while :; do inotifywait -e modify ~/.gtkrc-2.0 ; xappspicker ; done ) & disown`
 
 With the `bitmap` program you can create .xbm tiles. Here's one [example][1]
-(right-click and save as `xsetrootbitmap.xbm` in the current theme folder).
+(right-click and save as).
 
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).

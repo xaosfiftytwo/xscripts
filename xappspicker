@@ -11,7 +11,7 @@
 #    resulting colors to create a root window background with xsetroot.
 #  - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
 #    and is named "xsetrootbitmap.xbm"
-#  - if ./conky/theme.conkyrc exists in the theme's root directory, it will be
+#  - if ./conky/xappspicker.conkyrc exists in the theme's root directory, it will be
 #    started - but only if it isn't already running. The idea is to have conky
 #    display something that visuall enhances the wallpaper, e.g. an emblem, but 
 #    of course it can be anything...
@@ -208,7 +208,12 @@ print colorsys.hsv_to_rgb($hsv)")"
 
 do_xsetroot ()
 {
-xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
+if [[ -d "$bitmapdir" ]] ;then
+  xsetrootbitmap="$(randombitmap $bitmapdir)"
+else
+  xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
+fi
+
 if [ -r "$xsetrootbitmap" ] ; then
   xsetroot -fg "$1" -bg "$2" -bitmap "$xsetrootbitmap"
 else
@@ -216,12 +221,26 @@ else
 fi
 }
 
+randombitmap()
+{
+  # $1 is a directory containing .xbm files.
+  # will choose one randomly.
+    list=($1/*.xbm)
+    echo  ${list[$((RANDOM%${#list[@]}))]}
+}
+
 do_conky ()
 {
-  local pid="$(pgrep -f 'conky -c ./theme.conkyrc')"
-  [[ "x$pid" != "x" ]] && kill "$pid"
-  cd "$themepath/conky/"
-  [ -r "$themepath/conky/theme.conkyrc" ] && conky -c "./theme.conkyrc" & disown
+  local pid="$(pgrep -f "conky -c ./xappspicker.conkyrc")"
+  [[ "x$pid" != "x" ]] && kill "$pid" 
+  if [[ -r "$conkydir/xappspicker.conkyrc" ]]; then
+    cd "$conkydir"
+  elif [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
+    cd "$themepath/conky"
+  else
+    return
+  fi
+  conky -c "./xappspicker.conkyrc" & disown
 }
 ######################## FUNCTIONS END ########################################
 
@@ -237,6 +256,8 @@ xrdb -merge "$colorfile"
 
 [ -n "$dmenurc" ] && adjust_dmenu
 
+bitmapdir="/home/data/mygit/xscripts/xbm"
+
 fixedval="0.2"
 xsetrootbg="$(fixed_value "${fgbg[2]}")" # that is the background for selected text, aka Highlight
 fixedval="0.1"
@@ -246,5 +267,7 @@ xsetrootfg="$(fixed_value "${fgbg[2]}")" # that is the background for selected t
 #~ xsetrootfg="$(invert "${fgbg[1]}")" # that is the background
 
 do_xsetroot "$xsetrootfg" "$xsetrootbg"
+
+#~ conkydir="/home/data/mygit/conky/emblem"
 
 do_conky
