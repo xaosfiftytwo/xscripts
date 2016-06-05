@@ -14,7 +14,9 @@ also see forums.bunsenlabs.org/viewtopic.php?id=1941
 - it will set the brightness of the highlight color to two defined values,  
   and use the 2 resulting colors to create a root window background with xsetroot.
 - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
-  and is named "xsetrootbitmap.xbm"
+  and is named "xsetrootbitmap.xbm". Or, if `$bitmapdir` is defined, it will
+  choose a random .xbm from there. Some simple tiles are provided in the `xbm`
+  directory.
 - if `$conkydir` is defined, `$conkydir/xappspicker.conkyrc` will be started.
   Else, if `./conky/xappspicker.conkyrc` exists in the theme's root directory,
   it will be started.
@@ -38,8 +40,7 @@ You can set up `inotifywatch` to watch for changes in `~/.gtkrc-2.0` by adding
 this to your `~/.xinitrc` or `~/.config/openbox/autostart` or some such:  
 `( xappspicker ; while :; do inotifywait -e modify ~/.gtkrc-2.0 ; xappspicker ; done ) & disown`
 
-With the `bitmap` program you can create .xbm tiles. Here's one [example][1]
-(right-click and save as).
+With the `bitmap` program you can create .xbm tiles.
 
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
