@@ -17,9 +17,9 @@ also see forums.bunsenlabs.org/viewtopic.php?id=1941
   and is named "xsetrootbitmap.xbm". Or, if `$bitmapdir` is defined, it will
   choose a random .xbm from there. Some simple tiles are provided in the `xbm`
   directory.
-- if `$conkydir` is defined, `$conkydir/xappspicker.conkyrc` will be started.
-  Else, if `./conky/xappspicker.conkyrc` exists in the theme's root directory,
-  it will be started.
+- If `./conky/xappspicker.conkyrc` exists in the theme's root directory,
+  conky will start it. if your theme doe _not_ have an `xappspicker.conkyrc`,
+  the one from the previous theme will be killed.
 - another option is to invert particular colors, and use them for xsetroot.
    
 Adjustments are made in the MAIN section (the last 25 or so lines of the script).
@@ -28,7 +28,7 @@ Adjustments are made in the MAIN section (the last 25 or so lines of the script)
 
 - a fairly recent version of `bash`, I'd guess.  
 - `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
-  sure that this is included in a package called `pygtk`. And you most probably
+  sure that it is included in a package called `pygtk`. And you most probably
   already have it.
 - `xsetroot`
 - `bc` command line calculator.

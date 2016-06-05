@@ -233,14 +233,10 @@ do_conky ()
 {
   local pid="$(pgrep -f "conky -c ./xappspicker.conkyrc")"
   [[ "x$pid" != "x" ]] && kill "$pid" 
-  if [[ -r "$conkydir/xappspicker.conkyrc" ]]; then
-    cd "$conkydir"
-  elif [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
+  if [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
     cd "$themepath/conky"
-  else
-    return
+    conky -c "./xappspicker.conkyrc" & disown
   fi
-  conky -c "./xappspicker.conkyrc" & disown
 }
 ######################## FUNCTIONS END ########################################
 
@@ -267,7 +263,5 @@ xsetrootfg="$(fixed_value "${fgbg[2]}")" # that is the background for selected t
 #~ xsetrootfg="$(invert "${fgbg[1]}")" # that is the background
 
 do_xsetroot "$xsetrootfg" "$xsetrootbg"
-
-#~ conkydir="/home/data/mygit/conky/emblem"
 
 do_conky
