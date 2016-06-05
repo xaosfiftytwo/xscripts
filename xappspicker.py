@@ -17,14 +17,14 @@ w.realize()
 style=w.get_style()
 
 l=[gtk.STATE_NORMAL,gtk.STATE_ACTIVE,gtk.STATE_PRELIGHT,gtk.STATE_SELECTED,gtk.STATE_INSENSITIVE]
-#~ for i in l:
-	#~ print "- base",i,style.base[i].to_string()
-#~ for i in l:
-	#~ print "- text",i,style.text[i].to_string()
-#~ for i in l:
-	#~ print "- fg",i,style.fg[i].to_string()
-#~ for i in l:
-	#~ print "- bg",i,style.bg[i].to_string()
+for i in l:
+	print "- base",i,style.base[i].to_string()
+for i in l:
+	print "- text",i,style.text[i].to_string()
+for i in l:
+	print "- fg",i,style.fg[i].to_string()
+for i in l:
+	print "- bg",i,style.bg[i].to_string()
 
 #~ for i in l:
 	#~ print "- base",i,style.base[i]
@@ -40,8 +40,8 @@ l=[gtk.STATE_NORMAL,gtk.STATE_ACTIVE,gtk.STATE_PRELIGHT,gtk.STATE_SELECTED,gtk.S
 #~ if sys.argv[1] == 'bg':
 	#~ print style.bg[gtk.STATE_NORMAL]
 
-print style.fg[gtk.STATE_NORMAL].to_string()
-print style.bg[gtk.STATE_NORMAL].to_string()
+#~ print style.fg[gtk.STATE_NORMAL].to_string()
+#~ print style.bg[gtk.STATE_NORMAL].to_string()
 #~ print style.bg[gtk.STATE_SELECTED]
 
 #~ print style.fg[gtk.STATE_NORMAL].to_string()

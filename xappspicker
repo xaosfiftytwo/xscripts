@@ -128,7 +128,9 @@ w = gtk.Window()
 w.realize()
 style=w.get_style()
 print style.fg[gtk.STATE_NORMAL].to_string()
-print style.bg[gtk.STATE_NORMAL].to_string()' 2>/dev/null))
+print style.bg[gtk.STATE_NORMAL].to_string()
+print style.base[gtk.STATE_SELECTED].to_string()' 2>/dev/null))
+# the third one is the background for selected text, aka Highlight
 
 hex12to6
 }
@@ -145,27 +147,72 @@ hex12to6 ()
 invert ()
 {
   # inverts colors
-  for (( i=0 ; i<${#fgbg[@]} ; i++ ))
-  do
-    r=${fgbg[i]:1:2}
-    g=${fgbg[i]:3:2}
-    b=${fgbg[i]:5:2}
-    fgbg[i]="#$(printf "%02x%02x%02x\n" $((16#FF - 16#$r)) $((16#FF - 16#$g)) $((16#FF - 16#$b)) )"
-  done
+  r=${1:1:2}
+  g=${1:3:2}
+  b=${1:5:2}
+  printf "#%02x%02x%02x\n" $((16#FF - 16#$r)) $((16#FF - 16#$g)) $((16#FF - 16#$b))
 }
 
-half ()
+# this function halves a color value. deprecated in favor of fixed_value.
+# (half of black is still black, so this function is not so useful in automated
+# application)
+#~ half ()
+#~ {
+  #~ printf "#%02x%02x%02x" $((16#${1:1:2} / 2)) $((16#${1:3:2} / 2)) $((16#${1:5:2} / 2)) 
+#~ }
+
+hextriplet2float ()
 {
-  printf "#%02x%02x%02x" $((16#${1:1:2} / 2)) $((16#${1:3:2} / 2)) $((16#${1:5:2} / 2)) 
+  # convert the hex representation of one of r,g,b to a float between 0 and 1
+  bc<<<"obase=10; ibase=16; scale=3; $1/FF"
+}
+float255 ()
+{
+  # multiply a float between 0 and 1 by 255, doh.
+  bc<<<"$1*255"
+}
+fixed_value ()
+{
+  # sets the value of 1 color to $fixedval, leaving hue and saturation intact.
+  r=${1:1:2}
+  r="$(hextriplet2float ${r^^})"
+  g=${1:3:2}
+  g="$(hextriplet2float ${g^^})"
+  b=${1:5:2}
+  b="$(hextriplet2float ${b^^})"
+  rgb="$r,$g,$b"
+  hsv="$(python2 -c "import colorsys
+print colorsys.rgb_to_hsv($rgb)")"
+
+  huesat="${hsv%,*}"
+  huesat="${huesat##*(}"
+  hsv="$huesat,$fixedval"
+  rgb="$(python2 -c "import colorsys
+print colorsys.hsv_to_rgb($hsv)")"
+
+  rg="${rgb%,*}"
+  r="${rg%%,*}"
+  r="${r##*(}"
+  g="${rg##*,}"
+  b="${rgb##*,}"
+  b="${b%%)*}"
+
+  r="$(float255 $r)"
+  r="${r%%.*}"
+  g="$(float255 $g)"
+  g="${g%%.*}"
+  b="$(float255 $b)"
+  b="${b%%.*}"
+  printf "#%02x%02x%02x" $r $g $b
 }
 
 do_xsetroot ()
 {
 xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
 if [ -r "$xsetrootbitmap" ] ; then
-  xsetroot -fg "$(half "${fgbg[1]}")" -bg "${fgbg[1]}" -bitmap "$xsetrootbitmap"
+  xsetroot -fg "$1" -bg "$2" -bitmap "$xsetrootbitmap"
 else
-  xsetroot -fg "$(half "${fgbg[1]}")" -bg "${fgbg[1]}" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))
+  xsetroot -fg "$1" -bg "$2" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))
 fi
 }
 
@@ -190,9 +237,14 @@ xrdb -merge "$colorfile"
 
 [ -n "$dmenurc" ] && adjust_dmenu
 
-invert # inverts colors!
-#~ fgbg[1]="$(half "${fgbg[1]}")" # make bg darker!
+fixedval="0.2"
+xsetrootbg="$(fixed_value "${fgbg[2]}")" # that is the background for selected text, aka Highlight
+fixedval="0.1"
+xsetrootfg="$(fixed_value "${fgbg[2]}")" # that is the background for selected text, aka Highlight
 
-do_xsetroot
+#~ xsetrootbg="$(invert "${fgbg[0]}")" # that is the foreground
+#~ xsetrootfg="$(invert "${fgbg[1]}")" # that is the background
+
+do_xsetroot "$xsetrootfg" "$xsetrootbg"
 
 do_conky
