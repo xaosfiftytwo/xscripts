@@ -26,12 +26,12 @@ MAIN section (line 181 =>)
 
 #### Requirements:
 
+- a fairly recent version of `bash`, I'd guess.  
 - `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
   sure that this is included in a package called `pygtk`. And you most probably
   already have it.
 - `xsetroot`
 - `bc` command line calculator.
-- a fairly recent version of `bash`, I'd guess.  
 - the optional `do_conky` function relies on `pgrep`.
  
 #### Tips
@@ -42,5 +42,8 @@ this to your `~/.xinitrc` or `~/.config/openbox/autostart` or some such:
 
 With the `bitmap` program you can create .xbm tiles. Here's one [example][1]
 (right-click and save as `xsetrootbitmap.xbm` in the current theme folder).
+
+Try out the `xappspicker.py` script to see what other color values can be accessed
+(un/comment some sections).
 
 [1]: https://gist.githubusercontent.com/dcat/896ff92229de70e4e5ca/raw/7399f404afbf5159758cf11a6a3e6117e7acf748/tile.xbm
