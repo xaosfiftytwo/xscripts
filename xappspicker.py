@@ -15,14 +15,19 @@ import gtk
 w = gtk.Window()
 w.realize()
 style=w.get_style()
+#~ for attr in w.get_style():
+	#~ print attr
 
 l=[gtk.STATE_NORMAL,gtk.STATE_ACTIVE,gtk.STATE_PRELIGHT,gtk.STATE_SELECTED,gtk.STATE_INSENSITIVE]
 for i in l:
 	print "- base",i,style.base[i].to_string()
+print "============================================"
 for i in l:
 	print "- text",i,style.text[i].to_string()
+print "============================================"
 for i in l:
 	print "- fg",i,style.fg[i].to_string()
+print "============================================"
 for i in l:
 	print "- bg",i,style.bg[i].to_string()
 

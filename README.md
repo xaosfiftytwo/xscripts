@@ -1,48 +1,68 @@
-## Xscripts
+### Various scripts to unify looks between GTK and other graphical apps
 
-### Various scripts trying to homogenize looks between GTK and other graphical apps
+#### What's the idea of `xappspicker`?
 
-#### Right now, only `xappspicker` is fully working.
+The idea is to give you maximum control over the looks of your desktop, based
+on the contents of your current theme folder.  
+You can create custom configs for various apps, put them in your theme folder,
+and if you change your GTK2 theme, these apps will also change their looks accordingly.
+
+That is, if you don't already use some desktop environment, and prefer to roll 
+your own.  
+And if you like the minimal looks of apps like `dmenu` or `xpdf` or `xsetroot`.
+
+The current theme folder is chosen through the file `~/.gtkrc-2.0`, which is
+typically modified by an application like `lxapearance` (works great on _any_
+desktop), but can also be edited manually.
 
 #### What does `xappspicker` do ?
-It grabs the background, foreground and highlight colors from the current GTK2
-theme (now with python! much easier!), and sets them as back or foreground 
-for the Xapps. (they can be customized only by Xresources)
-also see forums.bunsenlabs.org/viewtopic.php?id=1941
 
-- additionally, it defines colors for dmenu.
-- it will set the brightness of the highlight color to two defined values,  
-  and use the 2 resulting colors to create a root window background with xsetroot.
-- xsetroot will utilize a bitmap, if it exists in the theme's root directory,
-  and is named "xsetrootbitmap.xbm". Or, if `$bitmapdir` is defined, it will
-  choose a random .xbm from there. Some simple tiles are provided in the `xbm`
-  directory.
-- If `./conky/xappspicker.conkyrc` exists in the theme's root directory,
-  conky will start it. if your theme doe _not_ have an `xappspicker.conkyrc`,
-  the one from the previous theme will be killed.
-- another option is to invert particular colors, and use them for xsetroot.
-   
-Adjustments are made in the MAIN section (the last 25 or so lines of the script).
+    It grabs some colors from the current gtk2 theme:
+     0: base foreground
+     1: base background
+     2: selected text foreground
+     3: selected text background
+    and puts them into the fgbg array.
+    it then uses these colors to style some apps:
+     - adjust_xapps: create an additional file with X resources, and make sure 
+       it is sourced (see man xrdb) 
+     - adjust_dmenu: define colors for dmenu, if you use a dmenurc file (see 
+       the included dmenu wrapper script)
+     - adjust_xsetroot: create a root window background with xsetroot.
+       xsetroot will utilize a bitmap, if it exists in the theme's root directory,
+       and is named "xsetrootbitmap.xbm"
+       color adjustments are possible, please see towards the end of the script.
+     - do_conky:
+       1. a conky running with "-c ./conky/xappspicker.conkyrc" will be killed.
+       2. if ./conky/xappspicker.conkyrc exists in the theme's root directory,
+       it will be re-started.
+
+*Please read and make your adjustments in the MAIN section at the bottom of
+the script!*
 
 #### Requirements:
 
-- a fairly recent version of `bash`, I'd guess.  
-- `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
-  sure that it is included in a package called `pygtk`. And you most probably
-  already have it.
-- `xsetroot`
-- `bc` command line calculator.
-- the optional `do_conky` function relies on `pgrep`.
+ - `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
+sure that this is included in a package called `pygtk`. And you most probably
+already have it.
+ - `xsetroot`
+ - a fairly recent version of `bash`, I'd guess.  
+ - the optional `do_conky` function relies on `pgrep`.
  
 #### Tips
 
+To avoid running the whole script after login, the script creates a file that 
+should be sourced instead.
+by default, add `. "$HOME/.local/share/xorg/xappspicker_rc"` to your
+autostart file (typically `~/.xinitrc` or `~/.config/openbox/autostart`).
+
 You can set up `inotifywatch` to watch for changes in `~/.gtkrc-2.0` by adding
-this to your `~/.xinitrc` or `~/.config/openbox/autostart` or some such:  
-`( xappspicker ; while :; do inotifywait -e modify ~/.gtkrc-2.0 ; xappspicker ; done ) & disown`
+this to your autostart file:  
+`( while :; do inotifywait -e modify ~/.gtkrc-2.0 ; xappspicker ; done ) & disown`
 
 With the `bitmap` program you can create .xbm tiles.
 
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
 
-[1]: https://gist.githubusercontent.com/dcat/896ff92229de70e4e5ca/raw/7399f404afbf5159758cf11a6a3e6117e7acf748/tile.xbm
+also see [this forum thread](forums.bunsenlabs.org/viewtopic.php?id=1941).

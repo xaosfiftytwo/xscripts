@@ -1,6 +1,12 @@
 #!/bin/bash
 
+# this is just a draft...
+# it will tell hsetroot to create a random gradient out of all the colors found
+# in a gtkrc with a gtk-color-scheme
+# esp. the mechanism to extract the colors is now superseded by xappspicker
+
 #~ exec >~/testing
+
 grepcol ()
 {
 ### GTK2_CURRENT_THEME is probably already part of the env (at least on my systems)
@@ -24,6 +30,7 @@ done
 
 echo -n " -gradient $((RANDOM%90)) -brightness -0.1
 "
+
 #~ for (( j=0 ; j<i ; j++ )); do
        #~ rootcmd="$rootcmd${col[j]}"
 #~ done
@@ -31,8 +38,6 @@ echo -n " -gradient $((RANDOM%90)) -brightness -0.1
 #~ col_bg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Fnbg_color: '/#/ {print $2}' | head -c 7)
 #~ col_fg=$(grep -E 'gtk_color_scheme|gtk-color-scheme' "$path" | head -n1 | awk -Ffg_color: '/#/ {print $2}' | head -c 7)  
 #~ IFS="$oldifs"
-
-
 }
 
 $(grepcol)

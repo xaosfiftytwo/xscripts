@@ -1,0 +1,8 @@
+#!/bin/dash
+
+# you can put this in your $HOME/bin and use it as a wrapper around dmenu
+
+args=''
+[ -f "$HOME/.config/dmenu/dmenurc" ] && args="$(cat "$HOME/.config/dmenu/dmenurc")"
+
+exec /usr/bin/dmenu $args $@

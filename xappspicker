@@ -1,25 +1,35 @@
 #!/bin/bash
 
-#### What does it do ?
-# It grabs the bg and fg colors from the current theme (now with python! much
-# easier!), and sets them as back or foreground for the Xapps. (they can be
-# customized only by Xresources)
+# modified by ohnonot/ondoho 2016
+# https://github.com/ohnonot/
 # also see forums.bunsenlabs.org/viewtopic.php?id=1941
-# 
-#  - additionally, it defines colors for dmenu.
-#  - it will invert the background color, and slightly darken it, and use the 2
-#    resulting colors to create a root window background with xsetroot.
-#  - xsetroot will utilize a bitmap, if it exists in the theme's root directory,
+
+# Please also read and make your adjustments in the
+# MAIN section (at the bottom of this script)
+
+# What does it do ?
+# It grabs some colors from the current gtk2 theme:
+#  0: base foreground
+#  1: base background
+#  2: selected text foreground
+#  3: selected text background
+# and puts them into the fgbg array.
+# it then uses these colors to style some apps:
+#  - adjust_xapps: create an additional file with X resources (see man xrdb) 
+#  - adjust_dmenu: define colors for dmenu, if you use a dmenurc file
+#  - adjust_xsetroot: create a root window background with xsetroot.
+#    xsetroot will utilize a bitmap, if it exists in the theme's root directory,
 #    and is named "xsetrootbitmap.xbm"
-#  - if ./conky/xappspicker.conkyrc exists in the theme's root directory, it will be
-#    started - but only if it isn't already running. The idea is to have conky
-#    display something that visuall enhances the wallpaper, e.g. an emblem, but 
-#    of course it can be anything...
+#    color adjustments are possible, please see towards the end of the script.
+#  - do_conky:
+#    1. a conky running with "-c ./conky/xappspicker.conkyrc" will be killed.
+#    2. if ./conky/xappspicker.conkyrc exists in the theme's root directory, it will be
+#    re-started.
 #    
-# if you don't want some particular function, it is easy to comment it out in the
-# MAIN section (line 165 =>)
+# Please also read and make your adjustments in the
+# MAIN section (at the bottom of this script)
 # 
-# #### Requirements:
+# Requirements:
 # 
 #  - `python 2.x`, and the `gtk` module. I'm not good with python, but I'm fairly 
 # sure that this is included in a package called `pygtk`. And you most probably
@@ -41,82 +51,74 @@ else
        themepath="$HOME/.themes/$GTK2_CURRENT_THEME"
 fi
 
-# since dmenu is not an Xapp, this is optional.
-# set to empty string to disable.
-dmenurc="$HOME/.config/dmenu/dmenurc"
-#~ dmenurc=""
-
-# font definitions in dmenu 4.6 are unclear to me. they also differ from
-# suckless-tools 4.5 - one cannot pass xfont-strings.
-# the one below should work on all systems, or at least fail silently.
-dmenufont="terminus"
-
-colorfile="$HOME/.local/share/xorg/xapps-col.xres"
-
 ########################## FUNCTIONS BEGIN ####################################
 
 adjust_xapps ()
 {
-##backgr
-#~ printf "XCalc.ti.Command.background: ${fgbg[1]}
-#~ "   >> "$colorfile"
-#~ printf "XCal*background: ${fgbg[1]}
-#~ " >> "$colorfile"
-printf "XFontSel*background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "display.background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "bitmap*background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "Xmag*background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "Xmag*helpLabel*background:  ${fgbg[0]}
-"   >> "$colorfile"
-printf "Xman*background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "xpdf*background:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "xpdf*matteColor:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "xscreensaver*background:  ${fgbg[1]}
-"   >> "$colorfile"
-#~ printf "*background:  ${fgbg[1]}
-#~ "   >> "$colorfile"
-##forg
-#~ printf "XCalc.ti.Command.foreground:  ${fgbg[0]}
-#~ " >> "$colorfile"
-#~ printf "XCal*foreground: ${fgbg[0]} 
-#~ " >> "$colorfile"
-printf "XFontSel*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "display.foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "bitmap*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "Xmag*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "Xmag*helpLabel*foreground:  ${fgbg[1]}
-"   >> "$colorfile"
-printf "Xman*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "xpdf*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-printf "xscreensaver*foreground: ${fgbg[0]} 
-" >> "$colorfile"
-#~ printf "*foreground: ${fgbg[0]} 
-#~ " >> "$colorfile"
+# make adjustments as desired.
+# please keep in mind that a leading '!' means 'commented out'
+cat <<EOF >> "$xappspicker_rc"
+echo '
+!!! background values
+! XCalc.ti.Command.background: ${fgbg[1]}
+! XCal*background: ${fgbg[1]}  
+XFontSel*background:  ${fgbg[1]}       
+display.background:  ${fgbg[1]}        
+bitmap*background:  ${fgbg[1]}         
+Xmag*background:  ${fgbg[1]}           
+Xmag*helpLabel*background:  ${fgbg[0]} 
+Xman*background:  ${fgbg[1]}           
+xpdf*background:  ${fgbg[1]}           
+xpdf*matteColor:  ${fgbg[1]}           
+xscreensaver*background:  ${fgbg[1]}   
+! URxvt*borderColor:  ${fgbg[1]}         
+! *background:  ${fgbg[1]}               
 
-# the rest is only necessary if you don't run xappspicker at each login:
-#~ includestring="#include <$colorfile>"
-#~ xresources="$HOME/.Xresources"
-#~ [[ "$(tail -1 "$xresources")" != "$includestring" ]] && echo "$includestring" >> "$xresources"
+!!! forground values
+! XCalc.ti.Command.foreground: ${fgbg[0]}
+! XCal*foreground: ${fgbg[0]}            
+XFontSel*foreground: ${fgbg[0]}        
+display.foreground: ${fgbg[0]}         
+bitmap*foreground: ${fgbg[0]}          
+Xmag*foreground: ${fgbg[0]}            
+Xmag*helpLabel*foreground:  ${fgbg[1]} 
+Xman*foreground: ${fgbg[0]}            
+xpdf*foreground: ${fgbg[0]}            
+xscreensaver*foreground: ${fgbg[0]}    
+! *foreground: ${fgbg[0]}                
+'| xrdb -merge
+EOF
+
 }
 
 adjust_dmenu ()
 {
 [ -n "$dmenufont" ] && echo -n "-fn $dmenufont " > "$dmenurc"
-echo "-nb ${fgbg[1]} -nf ${fgbg[0]} -sb ${fgbg[0]} -sf ${fgbg[1]} " >> "$dmenurc"
+echo "-nb ${fgbg[1]} -nf ${fgbg[0]} -sb ${fgbg[3]} -sf ${fgbg[2]} " >> "$dmenurc"
 echo "Created $dmenurc."
+}
+
+adjust_xsetroot ()
+{
+if [[ -d "$bitmapdir" ]] ;then
+  xsetrootbitmap="$(randombitmap $bitmapdir)"
+else
+  xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
+fi
+
+if [ -r "$xsetrootbitmap" ] ; then
+  echo "xsetroot -fg \"$1\" -bg \"$2\" -bitmap \"$xsetrootbitmap\"" >> "$xappspicker_rc"
+else
+  echo "xsetroot -fg \"$1\" -bg \"$2\" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))" >> "$xappspicker_rc"
+fi
+}
+
+randombitmap()
+{
+  # $1 is a directory containing .xbm files.
+  # will choose one randomly.
+    list=($1/*.xbm)
+    echo  ${list[$((RANDOM%${#list[@]}))]}
 }
 
 grepcol ()
@@ -129,6 +131,7 @@ w.realize()
 style=w.get_style()
 print style.fg[gtk.STATE_NORMAL].to_string()
 print style.bg[gtk.STATE_NORMAL].to_string()
+print style.text[gtk.STATE_SELECTED].to_string()
 print style.base[gtk.STATE_SELECTED].to_string()' 2>/dev/null))
 # the third one is the background for selected text, aka Highlight
 
@@ -173,7 +176,8 @@ float255 ()
 }
 fixed_value ()
 {
-  # sets the value of 1 color to $fixedval, leaving hue and saturation intact.
+  # sets the value of color $1 (format: #nnnnnn) to $2 (a float between 0 and 1),
+  # leaving hue and saturation intact, and returns the resulting color.
   r=${1:1:2}
   r="$(hextriplet2float ${r^^})"
   g=${1:3:2}
@@ -186,7 +190,7 @@ print colorsys.rgb_to_hsv($rgb)")"
 
   huesat="${hsv%,*}"
   huesat="${huesat##*(}"
-  hsv="$huesat,$fixedval"
+  hsv="$huesat,$2"
   rgb="$(python2 -c "import colorsys
 print colorsys.hsv_to_rgb($hsv)")"
 
@@ -206,62 +210,63 @@ print colorsys.hsv_to_rgb($hsv)")"
   printf "#%02x%02x%02x" $r $g $b
 }
 
-do_xsetroot ()
-{
-if [[ -d "$bitmapdir" ]] ;then
-  xsetrootbitmap="$(randombitmap $bitmapdir)"
-else
-  xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
-fi
-
-if [ -r "$xsetrootbitmap" ] ; then
-  xsetroot -fg "$1" -bg "$2" -bitmap "$xsetrootbitmap"
-else
-  xsetroot -fg "$1" -bg "$2" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))
-fi
-}
-
-randombitmap()
-{
-  # $1 is a directory containing .xbm files.
-  # will choose one randomly.
-    list=($1/*.xbm)
-    echo  ${list[$((RANDOM%${#list[@]}))]}
-}
-
 do_conky ()
 {
   local pid="$(pgrep -f "conky -c ./xappspicker.conkyrc")"
   [[ "x$pid" != "x" ]] && kill "$pid" 
   if [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
-    cd "$themepath/conky"
-    conky -c "./xappspicker.conkyrc" & disown
+    echo "cd \"$themepath/conky\"" >> "$xappspicker_rc"
+    echo "conky -c \"./xappspicker.conkyrc\" & disown" >> "$xappspicker_rc"
   fi
 }
 ######################## FUNCTIONS END ########################################
 
 ######################## MAIN BEGIN ###########################################
 
-rm -f "$colorfile"
+# to avoid running the whole script after login, this file should be sourced instead:
+xappspicker_rc="$HOME/.local/share/xorg/xappspicker_rc"
+rm -f "$xappspicker_rc"
+mkdir -p "$(dirname "$xappspicker_rc")"
+
+# since dmenu is not an Xapp, this is optional.
+# set to empty string to disable.
+dmenurc="$HOME/.config/dmenu/dmenurc"
+
+# font definitions in dmenu 4.6 are unclear to me. they also differ from
+# suckless-tools 4.5 - one cannot pass xfont-strings.
+# the one below should work on all systems, or at least fail silently.
+dmenufont="terminus"
 
 grepcol
 
-adjust_xapps
-
-xrdb -merge "$colorfile"
-
-[ -n "$dmenurc" ] && adjust_dmenu
-
+# prepare the values for xsetroot. please see man xsetroot.
+# 1.: do you want to choose a random bitmap from the following dir?
+#     if not, set this to "", and xsetroot will choose:
+#      a) the file xsetrootbitmap.xbm from $themedir, or, failing that
+#      b) a random -mod.
 bitmapdir="/home/data/mygit/xscripts/xbm"
-
-fixedval="0.2"
-xsetrootbg="$(fixed_value "${fgbg[2]}")" # that is the background for selected text, aka Highlight
-fixedval="0.1"
-xsetrootfg="$(fixed_value "${fgbg[2]}")" # that is the background for selected text, aka Highlight
-
+# 2.: which color to choose as a base for the background? I choose the background for
+#     selected text, usually the most colorful accent in the theme. It's the 4th and
+#     last color in the array generated by grepcol() = ${fgbg[3]}
+# 3.: manipulate that color. 
+#     a) i prefer to darken the background to 20%, and the foreground to 10%
+xsetrootbg="$(fixed_value "${fgbg[3]}" "0.2")"
+xsetrootfg="$(fixed_value "${fgbg[3]}" "0.1")"
+#     b) another possibility: color-invert (=negative) the colors
 #~ xsetrootbg="$(invert "${fgbg[0]}")" # that is the foreground
 #~ xsetrootfg="$(invert "${fgbg[1]}")" # that is the background
+# functions can be combined, too.
+########
+adjust_xsetroot "$xsetrootfg" "$xsetrootbg"
 
-do_xsetroot "$xsetrootfg" "$xsetrootbg"
+# which xapps will be affected?
+# please see the function adjust_xapps and un/comment or add desired values.
+adjust_xapps
+
+# adjusting dmenu is simpler, we simply take the 4 colors from the array:
+# base fore/background, selected text fore/background.
+[ -n "$dmenurc" ] && adjust_dmenu
 
 do_conky
+
+. "$xappspicker_rc"
