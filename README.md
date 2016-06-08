@@ -65,4 +65,4 @@ With the `bitmap` program you can create .xbm tiles.
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
 
-also see [this forum thread](forums.bunsenlabs.org/viewtopic.php?id=1941).
+also see [this forum thread](https://forums.bunsenlabs.org/viewtopic.php?id=1941).
