@@ -58,7 +58,7 @@ the script!*
 
 It is possible to simply run the script as is at login.
 
-However, the script isn't exactly fast and might create a noticeable lag during
+However, it isn't exactly fast and might create a noticeable lag during
 login.
 
 To avoid that, the script generates a file `$HOME/.local/share/xorg/xappspicker_rc`.  
@@ -77,7 +77,10 @@ You can achieve this by adding something like this to your autostart file (typic
 I recommend using dash instead of bash; it is much faster, and everything has
 been tested to work with dash's limited capabilities.
 
-You can create .xbm tiles with the `bitmap` program.
+I have added a large collection of .xbm tiles suitable for xsetroot; they're in
+`xbm` and subfolders.
+
+You can also quickly create .xbm tiles with the `bitmap` program.
 
 You can symlink the script `xappspicker` to somewhere in your `$PATH`; however,
 do not copy over the actual script.
