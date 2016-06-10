@@ -41,8 +41,11 @@
 # the directory where the script itself (and files it depends upon) resides.
 # ( symlinking the executable to e.g. $HOME/bin does not break this )
 SCRIPT_DIR="$(readlink "$0")"
-SCRIPT_DIR="${SCRIPT_DIR%/*}"
-[ -z "$SCRIPT_DIR" ] && SCRIPT_DIR="${0%/*}"
+if [ -z "$SCRIPT_DIR" ]; then
+  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+else
+  SCRIPT_DIR="${SCRIPT_DIR%/*}"
+fi
 
 ### GTK2_RC_FILES is probably already part of the env (at least on my systems)
 ### https://stackoverflow.com/a/11686912
