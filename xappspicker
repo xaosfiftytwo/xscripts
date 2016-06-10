@@ -50,7 +50,7 @@ SCRIPT_DIR="${SCRIPT_DIR%/*}"
 # the latter we have to redo time and again, otherwise the script won't work
 # when run manually after a theme change.
 GTK2_CURRENT_THEME="$($(which grep) gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)"
-if [ -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
+if [ -f  "$HOME/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc" ]
 then 
        themepath="$HOME/.themes/$GTK2_CURRENT_THEME"
 else
@@ -183,7 +183,7 @@ print colorsys.hsv_to_rgb($hsv)")"
 adjust_tint2 ()
 {
 killall tint2
-tint2rc="~/.themes/$GTK2_CURRENT_THEME/tint2/tint2rc"
+tint2rc="$HOME/.themes/$GTK2_CURRENT_THEME/tint2/tint2rc"
 if [ -f "$tint2rc" ];then
   echo "tint2 -c \"$tint2rc\" &" >> "$xappspicker_rc"
 else
