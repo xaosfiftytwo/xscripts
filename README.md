@@ -72,12 +72,15 @@ The idea is:
 You can achieve this by adding something like this to your autostart file (typically
 `~/.xinitrc` or `~/.config/openbox/autostart`):
 
-    dash -c '. "$HOME/.local/share/xorg/xappspicker_rc";sleep 5; while :; do inotifywait -e modify ~/.gtkrc-2.0; xappspicker; done' &
+    dash -c '. "$HOME/.local/share/xorg/xappspicker_rc";sleep 5; while :; do inotifywait -e modify $HOME/.gtkrc-2.0; /path/to/xappspicker; done' &
 
 I recommend using dash instead of bash; it is much faster, and everything has
 been tested to work with dash's limited capabilities.
 
 You can create .xbm tiles with the `bitmap` program.
+
+You can symlink the script `xappspicker` to somewhere in your `$PATH`; however,
+do not copy over the actual script.
 
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
