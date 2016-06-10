@@ -51,6 +51,7 @@ the script!*
    a package called `pygtk`. And you most probably already have it.
  - `xsetroot`
  - a fairly recent version of `bash`, I'd guess.  
+ - `bc` (command line calculator).
  - `hexdump` and `shuf` for the posix compliant random functions.
  
 #### Tips

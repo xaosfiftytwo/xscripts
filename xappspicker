@@ -182,6 +182,7 @@ print colorsys.hsv_to_rgb($hsv)")"
 
 adjust_tint2 ()
 {
+killall tint2
 tint2rc="~/.themes/$GTK2_CURRENT_THEME/tint2/tint2rc"
 if [ -f "$tint2rc" ];then
   echo "tint2 -c \"$tint2rc\" &" >> "$xappspicker_rc"
