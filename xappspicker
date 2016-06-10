@@ -38,57 +38,30 @@
 #  - a fairly recent version of `bash`, I'd guess.  
 #  - the optional `do_conky` function relies on `pgrep`.
 
+# the directory where the script itself (and files it depends upon) resides.
+# ( symlinking the executable to e.g. $HOME/bin does not break this )
+SCRIPT_DIR="$(readlink "$0")"
+SCRIPT_DIR="${SCRIPT_DIR%/*}"
+[ -z "$SCRIPT_DIR" ] && SCRIPT_DIR="${0%/*}"
+
 ### GTK2_RC_FILES is probably already part of the env (at least on my systems)
 ### https://stackoverflow.com/a/11686912
 : ${GTK2_RC_FILES=$HOME/.gtkrc-2.0}
 # the latter we have to redo time and again, otherwise the script won't work
 # when run manually after a theme change.
 GTK2_CURRENT_THEME="$(/usr/bin/grep gtk-theme-name $GTK2_RC_FILES|cut -d\" -f2)"
-if [ ! -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
+if [ -f  ~/.themes/$GTK2_CURRENT_THEME/gtk-2.0/gtkrc ]
 then 
-       themepath="/usr/share/themes/$GTK2_CURRENT_THEME"
-else
        themepath="$HOME/.themes/$GTK2_CURRENT_THEME"
+else
+       themepath="/usr/share/themes/$GTK2_CURRENT_THEME"
 fi
 
 ########################## FUNCTIONS BEGIN ####################################
 
 adjust_xapps ()
 {
-# make adjustments as desired.
-# please keep in mind that a leading '!' means 'commented out'
-cat <<EOF >> "$xappspicker_rc"
-echo '
-!!! background values
-! XCalc.ti.Command.background: ${fgbg[1]}
-! XCal*background: ${fgbg[1]}  
-XFontSel*background:  ${fgbg[1]}       
-display.background:  ${fgbg[1]}        
-bitmap*background:  ${fgbg[1]}         
-Xmag*background:  ${fgbg[1]}           
-Xmag*helpLabel*background:  ${fgbg[0]} 
-Xman*background:  ${fgbg[1]}           
-xpdf*background:  ${fgbg[1]}           
-xpdf*matteColor:  ${fgbg[1]}           
-xscreensaver*background:  ${fgbg[1]}   
-! URxvt*borderColor:  ${fgbg[1]}         
-! *background:  ${fgbg[1]}               
-
-!!! forground values
-! XCalc.ti.Command.foreground: ${fgbg[0]}
-! XCal*foreground: ${fgbg[0]}            
-XFontSel*foreground: ${fgbg[0]}        
-display.foreground: ${fgbg[0]}         
-bitmap*foreground: ${fgbg[0]}          
-Xmag*foreground: ${fgbg[0]}            
-Xmag*helpLabel*foreground:  ${fgbg[1]} 
-Xman*foreground: ${fgbg[0]}            
-xpdf*foreground: ${fgbg[0]}            
-xscreensaver*foreground: ${fgbg[0]}    
-! *foreground: ${fgbg[0]}                
-'| xrdb -merge
-EOF
-
+echo "echo '$1' | xrdb -merge" >> "$xappspicker_rc"
 }
 
 adjust_dmenu ()
@@ -100,25 +73,21 @@ echo "Created $dmenurc."
 
 adjust_xsetroot ()
 {
-if [[ -d "$bitmapdir" ]] ;then
-  xsetrootbitmap="$(randombitmap $bitmapdir)"
+echo ". $SCRIPT_DIR/posix_compliant_random_functions" >> "$xappspicker_rc"
+
+if [ -d "$bitmapdir" ] ;then
+  echo "xsetroot -fg \"$1\" -bg \"$2\" -bitmap \"\$(randombitmap \"$bitmapdir\")\"" >> "$xappspicker_rc"
+elif [ -f "$themepath/xsetrootbitmap.xbm" ] ;then
+  echo "xsetroot -fg \"$1\" -bg \"$2\" -bitmap \"$themepath/xsetrootbitmap.xbm\"" >> "$xappspicker_rc"
 else
-  xsetrootbitmap="$themepath/xsetrootbitmap.xbm"
+  echo "xsetroot -fg \"$1\" -bg \"$2\" -mod \$(( \$(random)%15 + 2)) \$(( \$(random)%15 + 2))" >> "$xappspicker_rc"
 fi
 
-if [ -r "$xsetrootbitmap" ] ; then
-  echo "xsetroot -fg \"$1\" -bg \"$2\" -bitmap \"$xsetrootbitmap\"" >> "$xappspicker_rc"
-else
-  echo "xsetroot -fg \"$1\" -bg \"$2\" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))" >> "$xappspicker_rc"
-fi
-}
-
-randombitmap()
-{
-  # $1 is a directory containing .xbm files.
-  # will choose one randomly.
-    list=($1/*.xbm)
-    echo  ${list[$((RANDOM%${#list[@]}))]}
+#~ if [ -r "$xsetrootbitmap/*xbm" ] ; then
+  #~ echo "xsetroot -fg \"$1\" -bg \"$2\" -bitmap \"$xsetrootbitmap\"" >> "$xappspicker_rc"
+#~ else
+  #~ echo "xsetroot -fg \"$1\" -bg \"$2\" -mod $(( $RANDOM%15 + 2)) $(( $RANDOM%15 + 2))" >> "$xappspicker_rc"
+#~ fi
 }
 
 grepcol ()
@@ -210,15 +179,31 @@ print colorsys.hsv_to_rgb($hsv)")"
   printf "#%02x%02x%02x" $r $g $b
 }
 
-do_conky ()
+
+adjust_tint2 ()
 {
-  local pid="$(pgrep -f "conky -c ./xappspicker.conkyrc")"
-  [[ "x$pid" != "x" ]] && kill "$pid" 
-  if [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
-    echo "cd \"$themepath/conky\"" >> "$xappspicker_rc"
-    echo "conky -c \"./xappspicker.conkyrc\" & disown" >> "$xappspicker_rc"
-  fi
+tint2rc="~/.themes/$GTK2_CURRENT_THEME/tint2/tint2rc"
+if [ -f "$tint2rc" ];then
+  echo "tint2 -c \"$tint2rc\" &" >> "$xappspicker_rc"
+else
+  echo "tint2 &" >> "$xappspicker_rc"
+fi
 }
+
+# killing processes does not work.
+#~ do_conky ()
+#~ {
+  #~ pid="$(pgrep -f "conky -c ./xappspicker.conkyrc")"
+  #~ [[ "x$pid" != "x" ]] && kill "$pid" 
+  #~ if [[ -r "$themepath/conky/xappspicker.conkyrc" ]]; then
+    #~ echo "cd \"$themepath/conky\"" >> "$xappspicker_rc"
+    #~ echo "conky -c \"./xappspicker.conkyrc\" & disown" >> "$xappspicker_rc"
+  #~ fi
+#~ }
+
+# if the theme contains this file, and it is executable, then execute it.
+[ -x "$themepath/xappspicker.exec" ] && echo "\"$themepath/xappspicker.exec\"" >> "$xappspicker_rc"
+
 ######################## FUNCTIONS END ########################################
 
 ######################## MAIN BEGIN ###########################################
@@ -244,7 +229,7 @@ grepcol
 #     if not, set this to "", and xsetroot will choose:
 #      a) the file xsetrootbitmap.xbm from $themedir, or, failing that
 #      b) a random -mod.
-bitmapdir="/home/data/mygit/xscripts/xbm"
+bitmapdir="$SCRIPT_DIR/xbm/squidfingers"
 # 2.: which color to choose as a base for the background? I choose the background for
 #     selected text, usually the most colorful accent in the theme. It's the 4th and
 #     last color in the array generated by grepcol() = ${fgbg[3]}
@@ -260,13 +245,41 @@ xsetrootfg="$(fixed_value "${fgbg[3]}" "0.1")"
 adjust_xsetroot "$xsetrootfg" "$xsetrootbg"
 
 # which xapps will be affected?
-# please see the function adjust_xapps and un/comment or add desired values.
-adjust_xapps
+# un/comment or add desired values.
+# please keep in mind that a leading '!' means 'commented out'
+adjust_xapps '!!! background values
+! XCalc.ti.Command.background: ${fgbg[1]}
+! XCal*background: ${fgbg[1]}
+XFontSel*background:  ${fgbg[1]}
+display.background:  ${fgbg[1]}
+bitmap*background:  ${fgbg[1]}
+Xmag*background:  ${fgbg[1]}
+Xmag*helpLabel*background:  ${fgbg[0]}
+Xman*background:  ${fgbg[1]}
+xpdf*background:  ${fgbg[1]}
+xpdf*matteColor:  ${fgbg[1]}
+xscreensaver*background:  ${fgbg[1]}
+! URxvt*borderColor:  ${fgbg[1]}
+! *background:  ${fgbg[1]}
 
-# adjusting dmenu is simpler, we simply take the 4 colors from the array:
+!!! forground values
+! XCalc.ti.Command.foreground: ${fgbg[0]}
+! XCal*foreground: ${fgbg[0]}
+XFontSel*foreground: ${fgbg[0]}
+display.foreground: ${fgbg[0]}
+bitmap*foreground: ${fgbg[0]}
+Xmag*foreground: ${fgbg[0]}
+Xmag*helpLabel*foreground:  ${fgbg[1]}
+Xman*foreground: ${fgbg[0]}
+xpdf*foreground: ${fgbg[0]}
+xscreensaver*foreground: ${fgbg[0]}
+! *foreground: ${fgbg[0]}'
+
+# adjusting dmenu is simpler, we take all 4 colors from the array:
 # base fore/background, selected text fore/background.
 [ -n "$dmenurc" ] && adjust_dmenu
 
-do_conky
+adjust_tint2
 
+# please do not remove this
 . "$xappspicker_rc"

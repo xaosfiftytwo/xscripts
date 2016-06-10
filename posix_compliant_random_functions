@@ -1,0 +1,15 @@
+random()
+{
+  # works exactly as $RANDOM in bash, i think
+	hexdump -n 2 -e '/2 "%u"' /dev/urandom
+  # wiki.ubuntu.com/DashAsBinSh#A.24RANDOM
+  # hexdump is part of util-linux on arch or bsdmainutils on debian
+}
+randombitmap()
+{
+  # $1 is a directory containing .xbm files.
+  # will choose one randomly.
+  shuf -n1 -e $1/*.xbm
+  # shuf is part of coreutils but you'll need 6.4 or newer
+  # stackoverflow.com/a/15754834
+}
