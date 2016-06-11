@@ -27,20 +27,20 @@ and puts them into the `fgbg` array.
 
 It then executes functions that use these colors to style some apps:
 - adjust_xapps: create an additional file with X resources, and make sure 
-it is sourced (see man xrdb) 
+  it is sourced (see man xrdb) 
 - adjust_dmenu: define colors for dmenu, if you use a dmenurc file (see 
-the included dmenu wrapper script)
+  the included dmenu wrapper script)
 - adjust_xsetroot: create a root window background with xsetroot.
-xsetroot will use a random bitmap from a defined folder, or use
-`xsetrootbitmap.xbm` if it exists in the theme's root directory, or generate
-a random -mod pattern (see `man xsetroot`).
-color adjustments are possible, please see towards the end of the script.
+  xsetroot will use a random bitmap from a defined folder, or use
+  `xsetrootbitmap.xbm` if it exists in the theme's root directory, or generate
+  a random -mod pattern (see `man xsetroot`).
+  color adjustments are possible, please see towards the end of the script.
 - adjust_tint2: if the theme folder contains `tint2/tint2rc`, tint2 will be
-started with this config file, otherwise tint2 will be started with its
-default config file (usually `~/.config/tint2/tint2rc`).
+  started with this config file, otherwise tint2 will be started with its
+  default config file (usually `~/.config/tint2/tint2rc`).
 - The script also looks for an executable file called `xappspicker.exec` in
-the current theme folder, and executes it if found. It can be anything,
-a shell or python script, a C program...
+  the current theme folder, and executes it if found. It can be anything,
+  a shell or python script, a C program...
 
 *Please read and make your adjustments in the MAIN section at the bottom of
 the script!*
@@ -87,5 +87,14 @@ do not copy over the actual script.
 
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
+
+#### Known linitations
+
+* The `adjust_tint2` function is rather crude: if you have multiple tint2 processes,
+  it will kill them all before re-starting the main tint2.  
+  A workaround is to use the `xappspicker.exec` script to restart all others.
+* The GTK theme name is not always the folder name. But in my `~/.gtkrc-2.0` the
+  _folder name_ is favoured in such cases, when changing themes with `lxappearance`.
+  This might or might not work when changing themes with a different app.
 
 also see [this forum thread](https://forums.bunsenlabs.org/viewtopic.php?id=1941).
