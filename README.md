@@ -88,11 +88,12 @@ do not copy over the actual script.
 Try out the `xappspicker.py` script to see what other color values can be accessed
 (un/comment some sections).
 
-#### Known linitations
+#### Known limitations
 
 * The `adjust_tint2` function is rather crude: if you have multiple tint2 processes,
   it will kill them all before re-starting the main tint2.  
   A workaround is to use the `xappspicker.exec` script to restart all others.
+  Or simply do not use the `adjust_tint2` function.
 * The GTK theme name is not always the folder name. But in my `~/.gtkrc-2.0` the
   _folder name_ is favoured in such cases, when changing themes with `lxappearance`.
   This might or might not work when changing themes with a different app.

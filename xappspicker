@@ -319,7 +319,7 @@ adjust_tint2
 
 # if the theme contains this file, and it is executable, then execute it.
 # this should usually be the last line added to "$xappspicker_rc"
-[ -x "$themepath/xappspicker.exec" ] && echo "\"$themepath/xappspicker.exec\"" >> "$xappspicker_rc"
+[ -x "$themepath/xappspicker.exec" ] && echo "exec \"$themepath/xappspicker.exec\"" >> "$xappspicker_rc"
 
 # please do not remove this
 . "$xappspicker_rc"
